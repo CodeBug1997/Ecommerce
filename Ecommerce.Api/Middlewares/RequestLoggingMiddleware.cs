@@ -24,12 +24,23 @@
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Exception");
+                _logger.LogError(
+                   ex,
+                   "[{RequestId}] Exception for {Method} {Path}",
+                   requestId,
+                   context.Request.Method,
+                   context.Request.Path);
                 throw;
             }
             
             var duration = DateTime.UtcNow - start;
-            _logger.LogInformation("[Response {RequestId}] {Path} with Status Code {Code} took {Duration} ms", requestId,context.Request.Path,context.Response.StatusCode, duration.TotalMilliseconds);
+            _logger.LogInformation(
+               "[{RequestId}] [Response] {Method} {Path} {StatusCode} took {Duration} ms",
+               requestId,
+               context.Request.Method,
+               context.Request.Path,
+               context.Response.StatusCode,
+               duration.TotalMilliseconds);
         }
     }
 }
