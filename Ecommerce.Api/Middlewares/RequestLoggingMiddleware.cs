@@ -13,6 +13,7 @@
 
         public async Task Invoke(HttpContext context)
         {
+            var start = DateTime.UtcNow;
             var requestId = Guid.NewGuid();
 
             _logger.LogInformation("[{RequestId}] {Method} {Path}",
@@ -26,9 +27,9 @@
                 _logger.LogError(ex, $"Exception");
                 throw;
             }
-            var start = DateTime.UtcNow;
+            
             var duration = DateTime.UtcNow - start;
-            _logger.LogInformation($"[Response] {context.Request.Path} took {duration.TotalMilliseconds} ms");
+            _logger.LogInformation("[Response {RequestId}] {Path} with Status Code {Code} took {Duration} ms", requestId,context.Request.Path,context.Response.StatusCode, duration.TotalMilliseconds);
         }
     }
 }
