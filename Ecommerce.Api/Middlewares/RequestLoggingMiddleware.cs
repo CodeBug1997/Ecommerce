@@ -3,23 +3,32 @@
     public class RequestLoggingMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger<RequestLoggingMiddleware> _logger;
 
-        public RequestLoggingMiddleware(RequestDelegate next)
+        public RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
         {
             _next = next ?? throw new ArgumentNullException(nameof(next));
+            _logger = logger;
         }
 
         public async Task Invoke(HttpContext context)
         {
+            var requestId = Guid.NewGuid();
+
+            _logger.LogInformation("[{RequestId}] {Method} {Path}",
+                requestId, context.Request.Method, context.Request.Path);
+            try
+            {
+                await _next(context);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Exception");
+                throw;
+            }
             var start = DateTime.UtcNow;
-
-            Console.WriteLine($"[Request] {context.Request.Path}");
-
-            await _next(context);
-
             var duration = DateTime.UtcNow - start;
-
-            Console.WriteLine($"[Response] {context.Request.Path} took {duration.TotalMilliseconds} ms");
+            _logger.LogInformation($"[Response] {context.Request.Path} took {duration.TotalMilliseconds} ms");
         }
     }
 }
