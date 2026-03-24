@@ -2,7 +2,7 @@
 
 namespace Ecommerce.Api.Services.Category
 {
-    public class CategoryService
+    public class CategoryService: ICategoryService
     {
         private readonly ProductService _productService; 
         public CategoryService(ProductService productService)
@@ -10,6 +10,6 @@ namespace Ecommerce.Api.Services.Category
             _productService = productService;
         }
 
-        public Guid GetProductId => _productService.Id;
+        public Guid GetProductId => _productService.Id; 
     }
 }

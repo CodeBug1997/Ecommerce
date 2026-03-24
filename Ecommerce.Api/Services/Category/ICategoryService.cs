@@ -2,6 +2,6 @@
 {
     public interface ICategoryService
     {
-        Guid Id { get; }
+        Guid GetProductId();
     }
 }

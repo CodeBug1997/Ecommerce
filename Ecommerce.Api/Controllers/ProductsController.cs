@@ -8,9 +8,9 @@ namespace Ecommerce.Api.Controllers
     [Route("[controller]")]
     public class ProductsController : ControllerBase
     {
-        private readonly ProductService _productService;
-        private readonly CategoryService _categoryService;
-        public ProductsController(ProductService productService, CategoryService categoryService)
+        private readonly IProductService _productService;
+        private readonly ICategoryService _categoryService;
+        public ProductsController(IProductService productService, ICategoryService categoryService)
         {
             _categoryService = categoryService;
             _productService = productService;
@@ -19,7 +19,7 @@ namespace Ecommerce.Api.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            return Ok(new { Product = _productService.Id, Category = _categoryService.GetProductId });
+            return Ok(new { Product = _productService.Id, Category = _categoryService.GetProductId() });
         }
     }
 }

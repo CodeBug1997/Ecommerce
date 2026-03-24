@@ -7,8 +7,8 @@ namespace Ecommerce.Api.Registration
     {
         public static IServiceCollection AddCustomServices(this IServiceCollection services)
         {
-            services.AddTransient<CategoryService>();
-            services.AddTransient<ProductService>();
+            services.AddTransient<ICategoryService,CategoryService>();
+            services.AddTransient<IProductService, ProductService>();
             return services;
         }
     }
