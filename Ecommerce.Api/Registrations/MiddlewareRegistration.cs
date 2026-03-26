@@ -1,7 +1,6 @@
 using Ecommerce.Api.Middlewares;
-using Microsoft.AspNetCore.Builder;
 
-namespace Ecommerce.Api.Registration
+namespace Ecommerce.Api.Registrations
 {
     public static class MiddlewareRegistration
     {

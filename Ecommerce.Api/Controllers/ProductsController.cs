@@ -19,7 +19,7 @@ namespace Ecommerce.Api.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            return Ok(new { Product = _productService.Id, Category = _categoryService.GetProductId() });
+            return Ok(new { Product = _productService.Id });
         }
     }
 }

@@ -1,11 +1,13 @@
-using Ecommerce.Api.Registration;
+using Dapper;
+using Ecommerce.Api.Registrations;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
-builder.Services.AddCustomServices();
+builder.Services.AddCustomServices(builder.Configuration);
+DefaultTypeMap.MatchNamesWithUnderscores = true;
 var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
