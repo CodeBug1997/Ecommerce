@@ -1,4 +1,4 @@
-﻿namespace Ecommerce.Api.Services.Category
+﻿namespace Ecommerce.Service.Services
 {
     public interface ICategoryService
     {

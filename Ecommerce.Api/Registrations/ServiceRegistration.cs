@@ -1,7 +1,7 @@
-using Ecommerce.Api.Repositories;
-using Ecommerce.Api.Services.Category;
-using Ecommerce.Api.Services.Product;
-using MySql.Data.MySqlClient;
+using Ecommerce.Repository.Common;
+using Ecommerce.Repository.Repositories;
+using Ecommerce.Service.Services;
+using Microsoft.Data.SqlClient;
 using System.Data;
 
 namespace Ecommerce.Api.Registrations
@@ -10,16 +10,19 @@ namespace Ecommerce.Api.Registrations
     {
         public static IServiceCollection AddCustomServices(this IServiceCollection services, ConfigurationManager configuration)
         {
-            services.AddSingleton<IDbConnection>(sp =>
+            services.AddScoped<IDbConnection>(sp =>
             {
                 var connectionString = configuration.GetConnectionString("DefaultConnection");
-                return new MySqlConnection(connectionString);
+                return new SqlConnection(connectionString);
             });
-            services.AddTransient<IProductService, ProductService>();
-            services.AddScoped<ICategoryService, CategoryService>();
-            
             services.AddScoped(typeof(IRepository<>), typeof(DapperRepository<>));
+            services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+            services.AddScoped<IProductRepository, ProductRepository>();
             return services;
         }
     }

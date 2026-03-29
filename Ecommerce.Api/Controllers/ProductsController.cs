@@ -1,20 +1,14 @@
-﻿using Ecommerce.Api.Services.Category;
-using Ecommerce.Api.Services.Product;
+﻿using Ecommerce.Service.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.Api.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class ProductsController : ControllerBase
+    public class ProductsController(IProductService productService, ICategoryService categoryService) : ControllerBase
     {
-        private readonly IProductService _productService;
-        private readonly ICategoryService _categoryService;
-        public ProductsController(IProductService productService, ICategoryService categoryService)
-        {
-            _categoryService = categoryService;
-            _productService = productService;
-        }
+        private readonly IProductService _productService = productService;
+        private readonly ICategoryService _categoryService = categoryService;
 
         [HttpGet]
         public IActionResult Get()
