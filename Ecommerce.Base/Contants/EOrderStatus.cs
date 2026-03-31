@@ -1,10 +1,10 @@
-﻿namespace Ecommerce.Api.Contants
+﻿namespace Ecommerce.Base.Contants
 {
-    public enum OrderStatus
+    public enum EOrderStatus
     {
-        Pending,
-        Completed,
-        Failed,
-        Cancelled
+        Pending = 0,
+        Completed = 1,
+        Failed = 2,
+        Cancelled = 3
     }
 }

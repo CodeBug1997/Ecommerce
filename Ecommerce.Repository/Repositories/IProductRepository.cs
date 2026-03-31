@@ -8,5 +8,6 @@ namespace Ecommerce.Repository.Repositories
     {
         Task<IEnumerable<Product>> GetByIdsAsync(IEnumerable<long> ids);
         Task<int> DecreaseStockAsync(long productId, int quantity, IDbTransaction transaction);
+        Task<int> IncreaseStockAsync(long productId, int quantity, IDbTransaction transaction);
     }
 }

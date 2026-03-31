@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Ecommerce.Service.Dtos
+namespace Ecommerce.Service.Dtos.OrderDtos
 {
-    public class CreateOrderItemRequest
+    public class CreateOrderItemRequestDto
     {
         [Range(1, long.MaxValue)]
         public long ProductId { get; set; }

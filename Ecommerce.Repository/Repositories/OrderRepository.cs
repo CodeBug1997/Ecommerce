@@ -42,9 +42,61 @@ namespace Ecommerce.Repository.Repositories
             await transaction.Connection!.ExecuteAsync(sql, items, transaction);
         }
 
-        public Task<Order?> GetWithItemsAsync(long id)
+        public async Task<Order?> GetWithItemsAsync(long id)
         {
-            throw new NotImplementedException();
+            var orderSql = @"
+            SELECT id, total_amount, status, created_at
+            FROM orders
+            WHERE id = @OrderId";
+
+            var itemSql = @"
+            SELECT id, order_id, product_id, quantity, unit_price
+            FROM order_items
+            WHERE order_id = @OrderId";
+
+            var order = await _connection.QueryFirstOrDefaultAsync<Order>(orderSql, new { OrderId = id });
+
+            if (order == null)
+                return null;
+
+            var items = await _connection.QueryAsync<OrderItem>(itemSql, new { OrderId = id });
+            order.Items = [.. items];
+
+            return order;
+        }
+
+        public async Task<Order?> GetWithItemsAsync(long id, IDbTransaction transaction)
+        {
+            var orderSql = @"
+            SELECT id, total_amount, status, created_at
+            FROM orders
+            WHERE id = @OrderId";
+
+            var itemSql = @"
+            SELECT id, order_id, product_id, quantity, unit_price
+            FROM order_items
+            WHERE order_id = @OrderId";
+
+            var order = await transaction.Connection!.QueryFirstOrDefaultAsync<Order>(orderSql, new { OrderId = id }, transaction);
+
+            if (order == null)
+                return null;
+
+            var items = await transaction.Connection!.QueryAsync<OrderItem>(itemSql, new { OrderId = id }, transaction);
+            order.Items = [.. items];
+
+            return order;
+        }
+
+        public async Task<int> UpdateAsync(Order order, IDbTransaction transaction)
+        {
+            const string sql = @"
+            UPDATE orders
+            SET 
+                total_amount = @TotalAmount,
+                status = @Status
+            WHERE id = @Id;";
+            return await transaction.Connection!.ExecuteAsync(sql, order, transaction);
         }
     }
 }

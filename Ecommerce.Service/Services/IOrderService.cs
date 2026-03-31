@@ -1,10 +1,12 @@
 ﻿using Ecommerce.Repository.Entities;
-using Ecommerce.Service.Dtos;
+using Ecommerce.Service.Dtos.OrderDtos;
 
 namespace Ecommerce.Service.Services
 {
     public interface IOrderService
     {
-        Task<Order> CreateOrderAsync(CreateOrderRequest request);
+        Task<OrderResponseDto> CreateOrderAsync(CreateOrderRequestDto request);
+        Task<Order?> CancelOrderAsync(long id);
+        Task<OrderResponseDto?> GetOrderAsync(long id);
     }
 }

@@ -1,5 +1,5 @@
 ﻿using Dapper;
-using Ecommerce.Base.Attributes;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Reflection;
 

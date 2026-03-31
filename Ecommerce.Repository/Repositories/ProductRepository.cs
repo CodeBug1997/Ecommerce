@@ -16,6 +16,15 @@ namespace Ecommerce.Repository.Repositories
             return await transaction.Connection!.ExecuteAsync(sql, new { Quantity = quantity, ProductId = productId }, transaction);
         }
 
+        public async Task<int> IncreaseStockAsync(long productId, int quantity, IDbTransaction transaction)
+        {
+            var sql = @"UPDATE products 
+            SET stock_quantity = stock_quantity + @Quantity,
+                updated_at = SYSUTCDATETIME()
+                WHERE id = @ProductId;";
+            return await transaction.Connection!.ExecuteAsync(sql, new { Quantity = quantity, ProductId = productId }, transaction);
+        }
+
         public async Task<IEnumerable<Product>> GetByIdsAsync(IEnumerable<long> ids)
         {
             const string sql = @"SELECT * FROM products WHERE id IN @Ids";

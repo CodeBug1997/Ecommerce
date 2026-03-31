@@ -9,6 +9,8 @@ namespace Ecommerce.Repository.Repositories
         Task<IEnumerable<Order>> GetTop5NewestOrdersAsync();
         Task<long> CreateAsync(Order order, IDbTransaction transaction);
         Task CreateItemsAsync(IEnumerable<OrderItem> items, IDbTransaction transaction);
+        Task<int> UpdateAsync(Order order, IDbTransaction transaction);
         Task<Order?> GetWithItemsAsync(long id);
+        Task<Order?> GetWithItemsAsync(long id, IDbTransaction transaction);
     }
 }
