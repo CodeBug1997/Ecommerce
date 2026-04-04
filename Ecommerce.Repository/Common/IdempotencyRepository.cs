@@ -15,13 +15,6 @@ namespace Ecommerce.Repository.Common
             return await _connection.QueryFirstOrDefaultAsync<T>(sql, new { Key = key });
         }
 
-        public async Task<int> SaveAsync(string key, long id)
-        {
-            var tableName = GetTableName();
-            var sql = $"INSERT INTO {tableName} VALUES (@Key,@IdempotencyId,SYSUTCDATETIME())";
-            return await _connection.ExecuteAsync(sql, new { Key = key, IdempotencyId = id });
-        }
-
         protected virtual string GetTableName()
         {
             var attr = typeof(T).GetCustomAttribute<TableAttribute>();

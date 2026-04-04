@@ -6,7 +6,7 @@ namespace Ecommerce.Api.Registrations
     {
         public static IApplicationBuilder UseCustomMiddlewares(this IApplicationBuilder app)
         {
-            app.UseMiddleware<HandleExceptionMiddleware>();
+            app.UseMiddleware<ExceptionMiddleware>();
             app.UseMiddleware<RequestLoggingMiddleware>();
             return app;
         }

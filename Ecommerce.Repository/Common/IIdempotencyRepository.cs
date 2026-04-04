@@ -1,8 +1,9 @@
-﻿namespace Ecommerce.Repository.Common
+﻿using System.Data;
+
+namespace Ecommerce.Repository.Common
 {
     public interface IIdempotencyRepository<T>
     {
         Task<T?> GetAsync(string key);
-        Task<int> SaveAsync(string key, long id);
     }
 }

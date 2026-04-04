@@ -11,4 +11,14 @@
     public class ConflictException(string message) : Exception(message)
     {
     }
+
+    public class OutOfStockException(string message): Exception(message)
+    {
+
+    }
+
+    public class ValidationException(string message) : Exception(message)
+    {
+
+    }
 }

@@ -1,6 +1,7 @@
 ﻿using Ecommerce.Base.Contants;
 using Ecommerce.Base.Exeptions;
 using Ecommerce.Repository.Entities;
+using Ecommerce.Repository.Idempotencies;
 using Ecommerce.Repository.Repositories;
 using Ecommerce.Repository.Transactions;
 using Ecommerce.Service.Dtos.OrderDtos;
@@ -10,11 +11,12 @@ namespace Ecommerce.Service.Services
 {
     public class OrderService(
         IOrderRepository orderRepository,
-        IProductRepository productRepository, IUnitOfWork unitOfWork) : IOrderService
+        IProductRepository productRepository, IUnitOfWork unitOfWork, IIdempotencyOrderRepository idempotency) : IOrderService
     {
         private readonly IOrderRepository _orderRepository = orderRepository;
         private readonly IProductRepository _productRepository = productRepository;
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly IIdempotencyOrderRepository _idempotency = idempotency;
 
         public async Task<OrderResponseDto> CreateOrderAsync(CreateOrderRequestDto request)
         {
@@ -47,7 +49,7 @@ namespace Ecommerce.Service.Services
 
                 if (product.StockQuantity < item.Quantity)
                 {
-                    throw new ConflictException(
+                    throw new OutOfStockException(
                         $"Product '{product.Name}' does not have enough stock. Available: {product.StockQuantity}, Requested: {item.Quantity}");
                 }
             }
@@ -101,13 +103,25 @@ namespace Ecommerce.Service.Services
                     }
                 }
 
+                if (await _idempotency.SaveAsync(request.Key, order.Id, _unitOfWork.Transaction) == 0)
+                {
+                    throw new ConflictException($"An order with the same idempotency key '{request.Key}' already exists.");
+                }
+
                 await _unitOfWork.CommitAsync();
 
-                return MapToResponse(order)!;
+                return MapToResponse(order);
             }
             catch
             {
-                await _unitOfWork.RollbackAsync();
+                try
+                {
+                    await _unitOfWork.RollbackAsync();
+                }
+                catch
+                {
+
+                }
                 throw;
             }
         }
@@ -158,12 +172,12 @@ namespace Ecommerce.Service.Services
 
         public async Task<OrderResponseDto?> GetOrderAsync(long id)
         {
-            return MapToResponse(await _orderRepository.GetWithItemsAsync(id)) ?? throw new BadRequestException($"Order with id '{id}' does not exist.");
+            return MapToResponse(await _orderRepository.GetWithItemsAsync(id) ?? throw new NotFoundException($"Order with id '{id}' does not exist."));
         }
 
-        private static OrderResponseDto? MapToResponse(Order? order)
+        private static OrderResponseDto MapToResponse(Order order)
         {
-            return order == null ? null : new OrderResponseDto
+            return new OrderResponseDto
             {
                 Id = order.Id,
                 TotalAmount = order.TotalAmount,

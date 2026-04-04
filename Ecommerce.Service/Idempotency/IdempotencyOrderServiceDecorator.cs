@@ -19,7 +19,7 @@ namespace Ecommerce.Service.Idempotency
 
         public async Task<OrderResponseDto> CreateOrderAsync(CreateOrderRequestDto request)
         {
-            if (string.IsNullOrEmpty(request.Key))
+            if (string.IsNullOrWhiteSpace(request.Key))
                 return await _inner.CreateOrderAsync(request);
 
             var existing = await _repo.GetAsync(request.Key);
@@ -32,8 +32,6 @@ namespace Ecommerce.Service.Idempotency
             }
 
             var response = await _inner.CreateOrderAsync(request);
-
-            await _repo.SaveAsync(request.Key, response.Id);
 
             return response;
         }
