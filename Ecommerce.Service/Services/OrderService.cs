@@ -103,7 +103,7 @@ namespace Ecommerce.Service.Services
                     }
                 }
 
-                if (await _idempotency.SaveAsync(request.Key, order.Id, _unitOfWork.Transaction) == 0)
+                if (!string.IsNullOrWhiteSpace(request.Key) && await _idempotency.SaveAsync(request.Key, order.Id, _unitOfWork.Transaction) == 0)
                 {
                     throw new ConflictException($"An order with the same idempotency key '{request.Key}' already exists.");
                 }

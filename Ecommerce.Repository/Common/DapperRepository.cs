@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Reflection;
 
@@ -27,14 +26,13 @@ namespace Ecommerce.Repository.Common
         {
             var tableName = GetTableName();
             var sql = $"SELECT * FROM {tableName} WHERE Id IN @Ids";
-            return await _connection.QueryAsync<T>(sql, new { Ids = ids});
+            return await _connection.QueryAsync<T>(sql, new { Ids = ids });
         }
 
         public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             var tableName = GetTableName();
             var sql = $"SELECT * FROM {tableName}";
-
             return await _connection.QueryAsync<T>(sql);
         }
 
@@ -42,14 +40,12 @@ namespace Ecommerce.Repository.Common
         {
             var tableName = GetTableName();
             var sql = $"DELETE FROM {tableName} WHERE Id = @Id";
-
             await _connection.ExecuteAsync(sql, new { Id = id });
         }
 
         protected virtual string GetTableName()
         {
-            var attr = typeof(T).GetCustomAttribute<TableAttribute>();
-
+            var attr = typeof(T).GetCustomAttribute<Base.Attributes.TableAttribute>();
             return attr == null ? throw new Exception($"Table attribute not found for {typeof(T).Name}") : attr.Name;
         }
     }

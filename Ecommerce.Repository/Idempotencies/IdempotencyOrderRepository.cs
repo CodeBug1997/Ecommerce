@@ -11,7 +11,7 @@ namespace Ecommerce.Repository.Idempotencies
         {
             var sql = $"INSERT INTO idempotency_orders (idempotency_key, order_id, created_at) VALUES (@Key, @OrderId, SYSUTCDATETIME())";
             return await _connection.ExecuteAsync(sql, new { Key = key, OrderId = id });
-        }
+        }        
         public async Task<int> SaveAsync(string key, long id, IDbTransaction transaction)
         {
             var sql = $"INSERT INTO idempotency_orders (idempotency_key, order_id, created_at) VALUES (@Key, @OrderId, SYSUTCDATETIME())";

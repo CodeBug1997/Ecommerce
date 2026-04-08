@@ -4,16 +4,17 @@ using Microsoft.AspNetCore.Mvc;
 namespace Ecommerce.Api.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/products")]
     public class ProductsController(IProductService productService, ICategoryService categoryService) : ControllerBase
     {
         private readonly IProductService _productService = productService;
         private readonly ICategoryService _categoryService = categoryService;
 
         [HttpGet]
-        public IActionResult Get()
+        public async Task<IActionResult> GetAll()
         {
-            return Ok(new { Product = _productService.Id });
+            var result = await _productService.GetAllProductsAsync();
+            return Ok(result);
         }
     }
 }
