@@ -6,6 +6,7 @@ using Ecommerce.Repository.Repositories;
 using Ecommerce.Repository.Transactions;
 using Ecommerce.Service.Dtos.OrderDtos;
 using System.Data;
+using System.Diagnostics;
 
 namespace Ecommerce.Service.Services
 {
@@ -17,15 +18,30 @@ namespace Ecommerce.Service.Services
         private readonly IProductRepository _productRepository = productRepository;
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
         private readonly IIdempotencyOrderRepository _idempotency = idempotency;
+        private static readonly ActivitySource ActivitySource = new("Ecommerce.Service.OrderService");
 
         public async Task<OrderResponseDto> CreateOrderAsync(CreateOrderRequestDto request)
         {
 
+            using var validateOrder = ActivitySource.StartActivity("ValidateOrder");
+            validateOrder?.SetTag("order.item_count", request.Items.Count);
+            validateOrder?.SetTag("order.idempotency_key", request.Key);
+
             if (request.Items == null || request.Items.Count == 0)
-                throw new BadRequestException("Order must contain at least one item.");
+            {
+                var ex = new BadRequestException("Order must contain at least one item.");
+                validateOrder?.SetStatus(ActivityStatusCode.Error);
+                validateOrder?.AddException(ex);
+                throw ex;
+            }
 
             if (request.Items.Any(x => x.Quantity <= 0))
-                throw new BadRequestException("Quantity must be greater than 0.");
+            {
+                var ex = new BadRequestException("Quantity must be greater than 0.");
+                validateOrder?.SetStatus(ActivityStatusCode.Error);
+                validateOrder?.AddException(ex);
+                throw ex;
+            }
 
             // Group items by product to calculate total quantity for each product
             var productGroup = request.Items.GroupBy(x => x.ProductId)
@@ -37,20 +53,30 @@ namespace Ecommerce.Service.Services
                .ToList();
 
             var products = (await _productRepository.GetByIdsAsync(productIds)).ToList();
-            var productMap = products.ToDictionary(x => x.Id);
-
             var missingProductIds = productIds.Except(products.Select(p => p.Id)).ToList();
             if (missingProductIds.Count != 0)
-                throw new NotFoundException($"Products not found: {string.Join(", ", missingProductIds)}");
-
-            foreach (var item in productGroup)
             {
-                var product = productMap[item.ProductId];
+                var ex = new NotFoundException($"Products not found: {string.Join(", ", missingProductIds)}");
+                validateOrder?.SetStatus(ActivityStatusCode.Error);
+                validateOrder?.AddException(ex);
+                throw ex;
+            }
 
-                if (product.StockQuantity < item.Quantity)
+            var productMap = products.ToDictionary(x => x.Id);
+            using (var checkStock = ActivitySource.StartActivity("CheckStock"))
+            {
+                foreach (var item in productGroup)
                 {
-                    throw new OutOfStockException(
-                        $"Product '{product.Name}' does not have enough stock. Available: {product.StockQuantity}, Requested: {item.Quantity}");
+                    var product = productMap[item.ProductId];
+
+                    if (product.StockQuantity < item.Quantity)
+                    {
+                        var ex = new OutOfStockException(
+                            $"Product '{product.Name}' does not have enough stock. Available: {product.StockQuantity}, Requested: {item.Quantity}");
+                        validateOrder?.SetStatus(ActivityStatusCode.Error);
+                        validateOrder?.AddException(ex);
+                        throw ex;
+                    }
                 }
             }
 
@@ -58,6 +84,7 @@ namespace Ecommerce.Service.Services
 
             try
             {
+                using var saveOrder = ActivitySource.StartActivity("SaveOrder");
                 var orderItems = request.Items.Select(item =>
                 {
                     var product = productMap[item.ProductId];
@@ -80,6 +107,8 @@ namespace Ecommerce.Service.Services
                 };
 
                 var orderId = await _orderRepository.CreateAsync(order, _unitOfWork.Transaction);
+                saveOrder?.SetTag("order.created_order_id", orderId);
+                saveOrder?.SetTag("order.total_amount", order.TotalAmount);
                 order.Id = orderId;
 
                 foreach (var item in order.Items)
@@ -98,18 +127,23 @@ namespace Ecommerce.Service.Services
                     if (updatedStock != 1)
                     {
                         var currentProduct = await _productRepository.GetByIdAsync(item.ProductId, _unitOfWork.Transaction) ?? throw new ConflictException($"Product with id '{item.ProductId}' no longer exists.");
-                        throw new ConflictException(
-                            $"Product '{currentProduct.Name}' does not have enough stock. Available: {currentProduct.StockQuantity}, Requested: {item.Quantity}");
+                        var ex = new ConflictException(
+                             $"Product '{currentProduct.Name}' does not have enough stock. Available: {currentProduct.StockQuantity}, Requested: {item.Quantity}");
+                        validateOrder?.SetStatus(ActivityStatusCode.Error);
+                        validateOrder?.AddException(ex);
+                        throw ex;
                     }
                 }
 
                 if (!string.IsNullOrWhiteSpace(request.Key) && await _idempotency.SaveAsync(request.Key, order.Id, _unitOfWork.Transaction) == 0)
                 {
-                    throw new ConflictException($"An order with the same idempotency key '{request.Key}' already exists.");
+                    var ex = new ConflictException($"An order with the same idempotency key '{request.Key}' already exists.");
+                    validateOrder?.SetStatus(ActivityStatusCode.Error);
+                    validateOrder?.AddException(ex);
+                    throw ex;
                 }
 
                 await _unitOfWork.CommitAsync();
-
                 return MapToResponse(order);
             }
             catch
